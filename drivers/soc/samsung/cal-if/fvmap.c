@@ -422,13 +422,33 @@ static void fvmap_copy_from_sram(void __iomem *map_base, void __iomem *sram_base
 		if (vclk == NULL)
 			continue;
 #ifdef CONFIG_EXYNOS_DEBUG_INFO
-		pr_info("domain_id : %s - id : %x\n",
-			vclk->name, fvmap_header[i].domain_id);
-		pr_info("  num_of_lv      : %d\n", fvmap_header[i].num_of_lv);
-		pr_info("  num_of_members : %d\n", fvmap_header[i].num_of_members);
+		for (j = 0; j < fvmap_header[i].num_of_lv; j++) {
+			new->table[j].rate = old->table[j].rate;
+			new->table[j].volt = old->table[j].volt;
+			pr_info("  lv : [%7d], volt = %d uV (%d %%) \n",
+				new->table[j].rate, new->table[j].volt * STEP_UV,
+				volt_offset_percent);
+		}
 #endif
 		old = sram_base + fvmap_header[i].o_ratevolt;
 		new = map_base + fvmap_header[i].o_ratevolt;
+
+		/* Ajuste customizado de tensao por cluster (1 step = 6250 uV = 6.25 mV) */
+		if (vclk->margin_id == MARGIN_CPUCL0) {
+			/* LITTLE: -12.5 mV (-2 steps) na curva e -6.25 mV (-1 step) nos 2 niveis mais baixos */
+			for (j = 0; j < fvmap_header[i].num_of_lv; j++) {
+				if (j >= fvmap_header[i].num_of_lv - 2)
+					old->table[j].volt -= 1;
+				else
+					old->table[j].volt -= 2;
+			}
+		} else if (vclk->margin_id == MARGIN_CPUCL2) {
+			/* BIG: +12.5 mV (+2 steps) apenas nos 2 degraus mais altos (j=0 e j=1) */
+			if (fvmap_header[i].num_of_lv >= 2) {
+				old->table[0].volt += 2;
+				old->table[1].volt += 2;
+			}
+		}
 
 		margin = init_margin_table[vclk->margin_id];
 		if (margin)

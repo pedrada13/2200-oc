@@ -6571,6 +6571,7 @@
 			dss-type = <0x01>;
 			max-freq = <0x2ac538>;
 			min-freq = <0x61a80>;
+			pm_qos-booting = <0x249f00>;
 			fast-switch;
 			thread-run-on = "0-5";
 			#cooling-cells = <0x02>;
