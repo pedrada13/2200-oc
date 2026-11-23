@@ -224,7 +224,7 @@ unsigned long vclk_recalc_rate(unsigned int id)
 	if (!vclk)
 		return 0;
 
-	if (vclk->is_fine_grain = true) {
+	if ((vclk->is_fine_grain = true)) {
 		rate = ra_recalc_rate(vclk->list[0]) / 1000;
 		if (rate > (FIN_HZ/1000)) {
 			if (vclk->vrate == 0)
